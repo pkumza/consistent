@@ -9,6 +9,13 @@ import (
 	"strconv"
 )
 
+// Consistent holds the information about the members of the consistent hash circle.
+type Consistent struct {
+	circle       map[uint32]string
+	sortedHashes uints
+	state        state
+}
+
 type uints []uint32
 
 // Len returns the length of the uints array.
@@ -20,20 +27,6 @@ func (x uints) Less(i, j int) bool { return x[i] < x[j] }
 // Swap exchanges elements i and j.
 func (x uints) Swap(i, j int) { x[i], x[j] = x[j], x[i] }
 
-var (
-	// ErrEmptyCircle is the error returned when trying to get an element when nothing has been added to hash.
-	ErrEmptyCircle = errors.New("empty circle")
-	// ErrNotSorted is the error returned when trying to get an element when the consistent circle is not sorted.
-	ErrNotSorted = errors.New("not sorted")
-)
-
-// Consistent holds the information about the members of the consistent hash circle.
-type Consistent struct {
-	circle       map[uint32]string
-	sortedHashes uints
-	state        state
-}
-
 // state : state machine of Consistent
 type state int
 
@@ -44,6 +37,13 @@ const (
 	stateAdding
 	// stateSorted After Sorting
 	stateSorted
+)
+
+var (
+	// ErrEmptyCircle is the error returned when trying to get an element when nothing has been added to hash.
+	ErrEmptyCircle = errors.New("empty circle")
+	// ErrNotSorted is the error returned when trying to get an element when the consistent circle is not sorted.
+	ErrNotSorted = errors.New("not sorted")
 )
 
 // New creates a new Consistent object.
