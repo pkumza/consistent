@@ -1,51 +1,63 @@
 package consistent
 
 import (
-	"fmt"
-	"hash/crc32"
 	"strconv"
 	"testing"
 )
 
-func Test_Mazinag(t *testing.T) {
-	t.Logf("呵呵呵")
-
-	fmt.Printf("%08x\n", crc32.ChecksumIEEE([]byte("2"))%10)
-	fmt.Printf("%08x\n", crc32.ChecksumIEEE([]byte("3"))%10)
-	fmt.Printf("%08x\n", crc32.ChecksumIEEE([]byte("4"))%10)
-	fmt.Printf("%08x\n", crc32.ChecksumIEEE([]byte("5"))%10)
-
+type testCase struct {
+	Bucket string
+	Weight int
 }
 
-func Test_New(t *testing.T) {
+var testCases = []testCase{
+	testCase{
+		Bucket: "10.115.46.1:5663",
+		Weight: 100,
+	},
+	testCase{
+		Bucket: "10.115.46.2:5663",
+		Weight: 200,
+	},
+	testCase{
+		Bucket: "10.115.46.3:5663",
+		Weight: 300,
+	},
+	testCase{
+		Bucket: "10.115.46.4:5663",
+		Weight: 400,
+	},
+}
+
+func Test_Get(t *testing.T) {
 	c := New()
-	c.Add("10.115.46.2:5668", 100)
-	c.Add("10.115.46.2:5666", 200)
-	c.Add("10.115.46.2:5667", 300)
-	c.Add("10.115.46.2:5665", 400)
+	for _, tc := range testCases {
+		c.Add(tc.Bucket, tc.Weight)
+	}
 	c.SortHashes()
-	// t.Logf("Rep %v", c.sortedHashes)
-	cnt1 := 0
-	cnt2 := 0
-	cnt3 := 0
-	cnt4 := 0
+	sum := make(map[string]int)
 	for i := 0; i < 100000; i++ {
-		keng, err := c.Get(strconv.Itoa(i))
+		bucket, err := c.Get("" + strconv.Itoa(i))
 		if err != nil {
 			t.Fatalf("Err %v", err)
 		}
-		if keng == "10.115.46.2:5668" {
-			cnt1++
-		}
-		if keng == "10.115.46.2:5667" {
-			cnt2++
-		}
-		if keng == "10.115.46.2:5666" {
-			cnt3++
-		}
-		if keng == "10.115.46.2:5665" {
-			cnt4++
+		sum[bucket]++
+	}
+	for _, tc := range testCases {
+		t.Logf("Bucket:%s, Weight:%d, Sum:%d\n", tc.Bucket, tc.Weight, sum[tc.Bucket])
+	}
+}
+
+func Benchmark_Get(b *testing.B) {
+	c := New()
+	for _, tc := range testCases {
+		c.Add(tc.Bucket, tc.Weight)
+	}
+	c.SortHashes()
+	for i := 0; i < b.N; i++ {
+		_, err := c.Get("" + strconv.Itoa(i))
+		if err != nil {
+			b.Fatalf("Err %v", err)
 		}
 	}
-	fmt.Printf("%v, %v, %v, %v", cnt1, cnt2, cnt3, cnt4)
 }
