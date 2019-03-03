@@ -59,12 +59,12 @@ func (c *Consistent) eltKey(elt string, idx int) string {
 	return strconv.Itoa(idx) + elt
 }
 
-// Add inserts a string element in the consistent hash replicas times.
-func (c *Consistent) Add(elt string, replicas int) {
+// Add inserts a string element in the consistent hash numOfReplicas times.
+func (c *Consistent) Add(elt string, numOfReplicas int) {
 	if c.state != stateAdding {
 		panic("state not stateAdding")
 	}
-	for i := 0; i < replicas; i++ {
+	for i := 0; i < numOfReplicas; i++ {
 		c.circle[c.hashKey(c.eltKey(elt, i))] = elt
 	}
 }
