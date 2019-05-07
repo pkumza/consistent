@@ -82,6 +82,35 @@ func (c *Consistent) Get(name string) (string, error) {
 	return c.circle[c.sortedHashes[i]], nil
 }
 
+func (c *Consistent) GetTwo(name string) (string, string, error) {
+	if c.state != stateSorted {
+		return "", "", ErrNotSorted
+	}
+	if len(c.circle) == 0 {
+		return "", "", ErrEmptyCircle
+	}
+	key := c.hashKey(name)
+	i := c.search(key)
+	a := c.circle[c.sortedHashes[i]]
+
+	if len(c.circle) == 1 {
+		return a, "", nil
+	}
+
+	start := i
+	var b string
+	for i = start + 1; i != start; i++ {
+		if i >= len(c.sortedHashes) {
+			i = 0
+		}
+		b = c.circle[c.sortedHashes[i]]
+		if b != a {
+			break
+		}
+	}
+	return a, b, nil
+}
+
 func (c *Consistent) search(key uint32) (i int) {
 	f := func(x int) bool {
 		return c.sortedHashes[x] > key
